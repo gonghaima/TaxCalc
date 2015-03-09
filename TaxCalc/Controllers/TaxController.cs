@@ -9,12 +9,16 @@ namespace TaxCalc.Controllers
 {
     public class TaxController : Controller
     {
+        IRateFactory _rateFactory;
+        public TaxController(IRateFactory rateFactory)
+        {
+            _rateFactory = rateFactory;
+        }
         //
         // GET: /Tax/
-        public ActionResult GetTaxValue(decimal incomeAmount)
+        public ActionResult GetTaxValue()
         {
-            RateFactory rateFactory = new RateFactory(incomeAmount);
-            return Json(incomeAmount*rateFactory.getTaxRate());
+            return Json(_rateFactory.totalTax());
         }
 	}
 }

@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TaxCalc.Controllers;
 using TaxCalc.Models;
+using Moq;
 
 namespace TaxCalc.Tests
 {
@@ -13,7 +14,7 @@ namespace TaxCalc.Tests
         {
             //Arrange
             decimal income = 10000m;
-            RateFactory rateFactory = new RateFactory(income);
+            IRateFactory rateFactory = new RateFactory(income);
 
             //Act
             decimal resultRate = rateFactory.getTaxRate();
@@ -74,12 +75,12 @@ namespace TaxCalc.Tests
         {
             //Arrange
             decimal income = 80000m;
-
+            IRateFactory rateFactory= new RateFactory(income);
             //Act
-            TaxController taxController = new TaxController();
-            var result = taxController.GetTaxValue(income);
+            TaxController taxController = new TaxController(rateFactory);
+            var result = taxController.GetTaxValue();
             decimal actualTaxAmount =decimal.Parse( ((System.Web.Mvc.JsonResult)(result)).Data.ToString());
-            decimal expectedTaxAmount = 28400M;
+            decimal expectedTaxAmount = 19230m;
 
             //Assert
             Assert.AreEqual(expectedTaxAmount, actualTaxAmount);
@@ -90,12 +91,13 @@ namespace TaxCalc.Tests
         {
             //Arrange
             decimal income = 50000m;
+            IRateFactory rateFactory = new RateFactory(income);
 
             //Act
-            TaxController taxController = new TaxController();
-            var result = taxController.GetTaxValue(income);
+            TaxController taxController = new TaxController(rateFactory);
+            var result = taxController.GetTaxValue();
             decimal actualTaxAmount = decimal.Parse(((System.Web.Mvc.JsonResult)(result)).Data.ToString());
-            decimal expectedTaxAmount = 15750M;
+            decimal expectedTaxAmount = 9380M;
 
             //Assert
             Assert.AreEqual(expectedTaxAmount, actualTaxAmount);
@@ -106,12 +108,13 @@ namespace TaxCalc.Tests
         {
             //Arrange
             decimal income = 30000m;
+            IRateFactory rateFactory = new RateFactory(income);
 
             //Act
-            TaxController taxController = new TaxController();
-            var result = taxController.GetTaxValue(income);
+            TaxController taxController = new TaxController(rateFactory);
+            var result = taxController.GetTaxValue();
             decimal actualTaxAmount = decimal.Parse(((System.Web.Mvc.JsonResult)(result)).Data.ToString());
-            decimal expectedTaxAmount = 6300M;
+            decimal expectedTaxAmount = 4970M;
 
             //Assert
             Assert.AreEqual(expectedTaxAmount, actualTaxAmount);
@@ -122,15 +125,58 @@ namespace TaxCalc.Tests
         {
             //Arrange
             decimal income = 10000m;
+            IRateFactory rateFactory = new RateFactory(income);
 
             //Act
-            TaxController taxController = new TaxController();
-            var result = taxController.GetTaxValue(income);
+            TaxController taxController = new TaxController(rateFactory);
+            var result = taxController.GetTaxValue();
             decimal actualTaxAmount = decimal.Parse(((System.Web.Mvc.JsonResult)(result)).Data.ToString());
             decimal expectedTaxAmount = 1150M;
 
             //Assert
             Assert.AreEqual(expectedTaxAmount, actualTaxAmount);
         }
+
+        [TestMethod]
+        public void TotalTaxMethod1()
+        {
+            //Arrange
+            RateFactory rf = new RateFactory(80000m);
+
+            //Act
+            decimal totalTax = rf.totalTax();
+
+            //Assert
+            Assert.AreEqual(19230m, totalTax);
+        }
+
+        [TestMethod]
+        public void TotalTaxMethod2()
+        {
+            //Arrange
+            RateFactory rf = new RateFactory(14000m);
+
+            //Act
+            decimal totalTax = rf.totalTax();
+
+            //Assert
+            Assert.AreEqual(14000m*0.115m, totalTax);
+        }
+
+        [TestMethod]
+        public void ControllerOnlyTest()
+        {
+            //Arrange
+            Mock<IRateFactory> mock = new Mock<IRateFactory>();
+            mock.Setup(m => m.totalTax()).Returns(5800m);
+            TaxController tc = new TaxController(mock.Object);
+
+            //Act
+            decimal actualTaxAmount = decimal.Parse(((System.Web.Mvc.JsonResult)(tc.GetTaxValue())).Data.ToString());
+
+            //Assert
+            Assert.AreEqual(5800m, actualTaxAmount);
+        }
+
     }
 }
